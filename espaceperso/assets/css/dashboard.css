@@ -1,0 +1,39 @@
+/* Dashboard Styles */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  padding: 20px;
+}
+
+.dashboard-card {
+  background-color: var(--color-white);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 4px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.dashboard h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-bottom: 20px;
+}
+
+.dashboard p {
+  font-size: 16px;
+  color: var(--color-black);
+  margin-bottom: 20px;
+}
+
+/* Mobile devices */
+@media screen and (max-width: 767px) {
+  .dashboard {
+      padding: 10px;
+  }
+}
