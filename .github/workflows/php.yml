@@ -16,7 +16,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mysqli
+          extensions: mysqli, mbstring
       - name: Check PHP syntax
         run: |
           find . -type f -name "*.php" -not -path "./vendor/*" -print0 |
@@ -51,7 +51,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mysqli
+          extensions: mysqli, mbstring
       - name: Create database schema
         run: mysql -h 127.0.0.1 -uci-user -pci-password bluelifeharmony < scripts/db.sql
       - name: Start PHP development server
@@ -83,9 +83,19 @@ jobs:
 
           grep -q "Bienvenue Test Recruiter" "$LOGIN_RESPONSE"
 
+          CONTACT_RESPONSE="$(mktemp)"
+          curl --silent --show-error --fail \
+            --cookie-jar "$COOKIE_JAR" --cookie "$COOKIE_JAR" \
+            --data-urlencode "name=Test" \
+            --data-urlencode "email=ci-test@example.com" \
+            --data-urlencode "message=Test message long enough" \
+            --output "$CONTACT_RESPONSE" \
+            http://127.0.0.1:8000/contact.php
+          grep -q "Votre session a expiré" "$CONTACT_RESPONSE"
+
           curl --silent --show-error --fail             --cookie "$COOKIE_JAR"             --output /dev/null             http://127.0.0.1:8000/logout.php
 
-          rm -f "$COOKIE_JAR" "$REGISTER_RESPONSE" "$LOGIN_RESPONSE"
+          rm -f "$COOKIE_JAR" "$REGISTER_RESPONSE" "$LOGIN_RESPONSE" "$CONTACT_RESPONSE"
       - name: Show PHP server logs on failure
         if: failure()
         run: cat /tmp/bluelifeharmony-php.log
