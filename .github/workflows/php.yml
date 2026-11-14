@@ -16,7 +16,76 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
+          extensions: mysqli
       - name: Check PHP syntax
         run: |
           find . -type f -name "*.php" -not -path "./vendor/*" -print0 |
             xargs -0 -n1 php -l
+
+  authentication-integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: bluelifeharmony
+          MYSQL_USER: ci-user
+          MYSQL_PASSWORD: ci-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_NAME: bluelifeharmony
+      DB_USER: ci-user
+      DB_PASSWORD: ci-password
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mysqli
+      - name: Create database schema
+        run: mysql -h 127.0.0.1 -uci-user -pci-password bluelifeharmony < scripts/db.sql
+      - name: Start PHP development server
+        run: |
+          php -S 127.0.0.1:8000 > /tmp/bluelifeharmony-php.log 2>&1 &
+          echo $! > /tmp/bluelifeharmony-php.pid
+          for attempt in $(seq 1 20); do
+            if curl --silent --fail http://127.0.0.1:8000/login.php > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/bluelifeharmony-php.log
+          exit 1
+      - name: Test registration, member area, logout and login
+        run: |
+          set -euo pipefail
+          COOKIE_JAR="$(mktemp)"
+          REGISTER_RESPONSE="$(mktemp)"
+          LOGIN_RESPONSE="$(mktemp)"
+
+          curl --silent --show-error --fail             --cookie-jar "$COOKIE_JAR" --cookie "$COOKIE_JAR"             --location             --data-urlencode "firstname=Test"             --data-urlencode "lastname=Recruiter"             --data-urlencode "email=ci-test@example.com"             --data-urlencode "password=StrongTestPassword123!"             --output "$REGISTER_RESPONSE"             http://127.0.0.1:8000/signup.php
+
+          grep -q "Bienvenue Test Recruiter" "$REGISTER_RESPONSE"
+
+          curl --silent --show-error --fail             --cookie-jar "$COOKIE_JAR" --cookie "$COOKIE_JAR"             --location             --output /dev/null             http://127.0.0.1:8000/logout.php
+
+          curl --silent --show-error --fail             --cookie-jar "$COOKIE_JAR" --cookie "$COOKIE_JAR"             --location             --data-urlencode "email=ci-test@example.com"             --data-urlencode "password=StrongTestPassword123!"             --output "$LOGIN_RESPONSE"             http://127.0.0.1:8000/login.php
+
+          grep -q "Bienvenue Test Recruiter" "$LOGIN_RESPONSE"
+
+          curl --silent --show-error --fail             --cookie "$COOKIE_JAR"             --output /dev/null             http://127.0.0.1:8000/logout.php
+
+          rm -f "$COOKIE_JAR" "$REGISTER_RESPONSE" "$LOGIN_RESPONSE"
+      - name: Show PHP server logs on failure
+        if: failure()
+        run: cat /tmp/bluelifeharmony-php.log
