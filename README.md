@@ -4,7 +4,7 @@ A PHP and MySQL website created to raise awareness about autism and promote incl
 
 ![PHP](https://img.shields.io/badge/PHP-8.2%2B-9B7EDB?style=flat-square&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-Database-C58BEA?style=flat-square&logo=mysql&logoColor=white)
-![Security](https://img.shields.io/badge/Focus-Web%20security-9B7EDB?style=flat-square&logo=owasp&logoColor=white)
+![Security](https://img.shields.io/badge/Focus-Web%20security-9B7EDB?style=flat-square&logo=owasp&logoColor=white) [![PHP quality checks](https://github.com/johannafoolchand/harmonylifeblue/actions/workflows/php.yml/badge.svg?branch=refacto)](https://github.com/johannafoolchand/harmonylifeblue/actions/workflows/php.yml)
 
 ## Project at a glance
 
