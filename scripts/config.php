@@ -1,25 +1,26 @@
 <?php
-// Connexion BDD
-$host = "localhost";
-$user = "root";
-$password = "root";
-$bdd = "bluelifeharmony";
+declare(strict_types=1);
 
-$lien = mysqli_connect($host, $user, $password, $bdd);
+// Database credentials are supplied through environment variables.
+// Never commit real credentials to the repository.
+$host = getenv('DB_HOST') ?: '127.0.0.1';
+$user = getenv('DB_USER') ?: '';
+$password = getenv('DB_PASSWORD') ?: '';
+$database = getenv('DB_NAME') ?: 'bluelifeharmony';
 
-if (!$lien) {
-    die("Connection failed: " . mysqli_connect_error());
-} else {
-    // echo "<p>Connected successfully to the database!</p>";
-    mysqli_query($lien, "set names utf8");
+if ($user === '' || $password === '') {
+    http_response_code(500);
+    error_log('Database configuration is incomplete. Set DB_USER and DB_PASSWORD.');
+    exit('Service temporarily unavailable.');
 }
 
-// VARIABLES
-$user = $_SESSION["user"];
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Logout
-if (isset($_GET['logout'])) {
-	session_destroy();
-    header("location: ../login.php");
+try {
+    $lien = new mysqli($host, $user, $password, $database);
+    $lien->set_charset('utf8mb4');
+} catch (mysqli_sql_exception $exception) {
+    http_response_code(500);
+    error_log('Database connection failed: ' . $exception->getMessage());
+    exit('Service temporarily unavailable.');
 }
-?>

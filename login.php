@@ -1,72 +1,72 @@
-<?php 
-    session_start();
-    include('./scripts/config.php');
+<?php
+declare(strict_types=1);
 
-    // Check user is already logged in, redirect to dashboard
-    if (isset($_SESSION["user"])) {
-        header("location:espaceperso/index.php");
-        exit();
+session_start();
+require_once __DIR__ . '/scripts/config.php';
+
+if (isset($_SESSION['user'])) {
+    header('Location: espaceperso/index.php');
+    exit;
+}
+
+$error = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+    $password = $_POST['password'] ?? '';
+
+    if (!$email || $password === '') {
+        $error = 'Identifiants incorrects. Vérifiez vos informations.';
+    } else {
+        $statement = $lien->prepare('SELECT id, email, password, nom, prenom FROM users WHERE email = ? LIMIT 1');
+        $statement->bind_param('s', $email);
+        $statement->execute();
+        $user = $statement->get_result()->fetch_assoc();
+        $statement->close();
+
+        if ($user && password_verify($password, $user['password'])) {
+            session_regenerate_id(true);
+            unset($user['password']);
+            $_SESSION['user'] = $user;
+            header('Location: espaceperso/index.php');
+            exit;
+        }
+
+        $error = 'Identifiants incorrects. Vérifiez vos informations.';
     }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="../assets/img/logo.png" />
-    <title>Blue Life Harmony - Login</title>
-    <link rel="stylesheet" href="assets/css/main.css" />
-    <link rel="stylesheet" href="assets/css/login.css" />
-    <script src="assets/js/index.js"></script>
-  </head>
-  <body>
-  <?php 
-    include('./partials/header.php');
-  ?>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Life Harmony - Connexion</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/login.css">
+</head>
+<body>
+<?php require __DIR__ . '/partials/header.php'; ?>
 <main class="login-page">
     <div class="login-container">
-    <h2>Espace perso</h2>
-        <form action="" method="post">
+        <h1>Espace personnel</h1>
+        <?php if ($error !== null): ?>
+            <p class="form-error" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+        <?php endif; ?>
+        <form action="login.php" method="post">
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" name="email" autocomplete="email" required>
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
             </div>
-            <button type="submit">Se Connecter</button>
+            <button type="submit">Se connecter</button>
         </form>
     </div>
-    <p>N'avez-vous pas de compte? <a href="signup.php">Inscrivez-vous ici</a></p>
-    <?php
-    if (!empty($_POST)) {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-    
-        // Fetch user data from the database based on the entered email
-        $getUserQuery = "SELECT * FROM users WHERE email='$email'";
-        $getUserResult = mysqli_query($lien, $getUserQuery);
-        $user = mysqli_fetch_assoc($getUserResult);
-    
-        // Check if the user exists and the entered password matches the hashed password
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION["user"] = $user;
-            header("location:espaceperso/index.php");
-            exit();
-        } else {
-            echo "<p style='color:red; text-align:center;'>Login incorrecte. Vérifiez vos informations</p>";
-        }
-    }
-
-echo $result['email'];
-?>
+    <p>Pas encore de compte ? <a href="signup.php">Inscrivez-vous ici</a></p>
 </main>
-
-<?php 
-    include('./partials/footer.php');
-?>
+<?php require __DIR__ . '/partials/footer.php'; ?>
 </body>
 </html>
-
