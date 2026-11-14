@@ -14,7 +14,7 @@ A PHP and MySQL website created to raise awareness about autism and promote incl
 | Backend | PHP 8.2+ |
 | Database | MySQL / compatible MariaDB |
 | Authentication | PHP password hashing and session-based member area |
-| Quality | PHP syntax checks with GitHub Actions |
+| Quality | PHP syntax checks and MySQL-backed authentication integration tests with GitHub Actions |
 
 ## Features
 
@@ -24,6 +24,7 @@ A PHP and MySQL website created to raise awareness about autism and promote incl
 - MySQL persistence through MySQLi
 - Member-only personal area
 - Shared page header and footer
+- Contact form with input validation and CSRF token validation
 
 ## Architecture
 
@@ -58,7 +59,7 @@ flowchart TD
 
 ## Local setup
 
-1. Install PHP with the MySQLi extension and MySQL/MariaDB.
+1. Install PHP with the MySQLi and mbstring extensions, plus MySQL/MariaDB.
 2. Create a database named `bluelifeharmony`.
 3. Import the schema:
 
@@ -82,8 +83,9 @@ flowchart TD
 - Passwords are stored using PHP's password hashing API.
 - Session IDs are regenerated after successful authentication.
 - User-provided values displayed in the member area are HTML-escaped.
+- The contact form validates input, protects POST submissions with a CSRF token, and uses a fixed sender with the visitor address in `Reply-To`.
 
-This is a learning project, not a production-ready service. Before public deployment, add CSRF protection to state-changing forms, rate limiting for authentication, secure cookie and HTTPS configuration, robust contact-form delivery, and security-focused integration tests. Rotate any database credentials that may have been used in earlier versions of this public repository.
+This is a learning project, not a production-ready service. Before public deployment, add CSRF protection to the registration and login forms, rate limiting for authentication, secure cookie and HTTPS configuration, and reliable contact-form delivery. The contact form's CSRF check and the registration/login flow are covered by automated integration checks; this does not replace a full security audit. Rotate any database credentials that may have been used in earlier versions of this public repository.
 
 ## Database schema
 
@@ -91,7 +93,7 @@ The schema is in `scripts/db.sql`. It uses InnoDB and UTF-8 (`utf8mb4`) so forei
 
 ## Quality checks
 
-GitHub Actions runs PHP syntax checks on pull requests targeting `refacto` and on pushes to `refacto` or feature branches.
+GitHub Actions runs PHP syntax checks and a MySQL-backed integration test on pull requests targeting `refacto` and on pushes to `refacto` or feature branches. The integration job exercises registration, access to the member area, logout, login, and rejection of a contact-form POST without a valid CSRF token.
 
 Run locally:
 
