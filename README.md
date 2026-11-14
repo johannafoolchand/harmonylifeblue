@@ -2,6 +2,20 @@
 
 A PHP and MySQL website created to raise awareness about autism and promote inclusion. The project includes public information pages, a blog-style page, a contact form, and a basic member area with registration and login.
 
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-9B7EDB?style=flat-square&logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Database-C58BEA?style=flat-square&logo=mysql&logoColor=white)
+![Security](https://img.shields.io/badge/Focus-Web%20security-9B7EDB?style=flat-square&logo=owasp&logoColor=white)
+
+## Project at a glance
+
+| Area | Implementation |
+| --- | --- |
+| Frontend | HTML, CSS and JavaScript |
+| Backend | PHP 8.2+ |
+| Database | MySQL / compatible MariaDB |
+| Authentication | PHP password hashing and session-based member area |
+| Quality | PHP syntax checks with GitHub Actions |
+
 ## Features
 
 - Public home, about, blog, and contact pages
@@ -10,6 +24,30 @@ A PHP and MySQL website created to raise awareness about autism and promote incl
 - MySQL persistence through MySQLi
 - Member-only personal area
 - Shared page header and footer
+
+## Architecture
+
+This diagram summarizes the documented request and data flow: public and member pages are served by PHP, which accesses MySQL through MySQLi. Authentication uses PHP sessions.
+
+```mermaid
+flowchart TD
+    V[Visitor / Browser] --> P[PHP pages]
+    P --> A{Authentication required?}
+    A -->|No| C[Public content]
+    A -->|Yes| S[Session check]
+    S -->|Authenticated| M[Member area]
+    S -->|Not authenticated| L[Login / registration]
+    P --> Q[MySQLi prepared statements]
+    L --> Q
+    M --> Q
+    Q --> DB[(MySQL database)]
+    classDef web fill:#24162f,stroke:#c58bea,color:#fff
+    classDef auth fill:#35172f,stroke:#ed83d0,color:#fff
+    classDef data fill:#171c2b,stroke:#9b7edb,color:#fff
+    class V,P,C,M web
+    class A,S,L auth
+    class Q,DB data
+```
 
 ## Tech stack
 
